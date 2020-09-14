@@ -2,3 +2,4 @@
 *.pickle
 .env
 __pycache__
+.replit
