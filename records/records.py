@@ -294,6 +294,11 @@ class Records(commands.Cog):
         embed.add_field(name='Most recent', value = fullmsg)
         return embed
 
+    async def save(self):
+        with open('records/records.pickle', 'wb') as f:
+            pickle.dump(self.data, f)
+        print('records data saved')
+
     ###########LISTENERS##########
 
     @commands.Cog.listener()
@@ -439,9 +444,7 @@ class Records(commands.Cog):
     async def save_records(self, ctx):
         if ctx.message.channel.id != self.config.getint('ControlID'):
             return
-        with open('records/records.pickle', 'wb') as f:
-            pickle.dump(self.data, f)
-        print('records data saved')
+        await self.save()
 
     @commands.command()
     @commands.is_owner()

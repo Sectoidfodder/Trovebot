@@ -1,11 +1,13 @@
 import traceback
 import sys
 import os
+import asyncio
 from dotenv import load_dotenv
 from configparser import ConfigParser
 from discord.ext import commands
 from automod.automod import AutoMod
 from records.records import Records
+from utils import autoping
 
 trovebot = commands.Bot('t!')
 config = ConfigParser()
@@ -46,6 +48,16 @@ async def reload_config(ctx):
 async def shutdown(ctx):
     await trovebot.logout()
 
+async def periodic_save():
+    while True:
+        await asyncio.sleep(1800)
+        await automod.save()
+        await records.save()
+        print('periodic save')
+
+autoping.autoping()
+
 trovebot.add_cog(automod)
 trovebot.add_cog(records)
+trovebot.loop.create_task(periodic_save())
 trovebot.run(os.getenv('TOKEN'))

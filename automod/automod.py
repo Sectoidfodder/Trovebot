@@ -187,6 +187,11 @@ class AutoMod(commands.Cog):
                 pass
         return channellist
 
+    async def save(self):
+        with open('automod/automod.pickle', 'wb') as f:
+            pickle.dump(self.data, f)
+        print('automod data saved')
+
     ###########LISTENERS##########
 
     @commands.Cog.listener()
@@ -434,9 +439,7 @@ class AutoMod(commands.Cog):
     async def save_automod(self, ctx):
         if ctx.message.channel.id != self.config.getint('ControlID'):
             return
-        with open('automod/automod.pickle', 'wb') as f:
-            pickle.dump(self.data, f)
-        print('automod data saved')
+        await self.save()
 
     @commands.command()
     @commands.is_owner()
