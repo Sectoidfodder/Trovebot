@@ -24,6 +24,8 @@ class MemberData():
     legacy_roles: List[int]
     #sorted list of all rep messages
     rep_msgs: List[Msg]
+    #given poe account (no necessarily confirmed)
+    poe_account: Optional[str]
 
     def __init__(self, id: int):
         self.id = id
@@ -32,6 +34,7 @@ class MemberData():
         self.vouch_offset = (0, 0, 0)
         self.legacy_roles = []
         self.rep_msgs = []
+        self.poe_account = None
 
     #adds message to a list, maintaining sorted order and ignoring duplicate IDs
     def _add_msg(self, msg: Msg, msglist: List[Msg]):

@@ -7,12 +7,12 @@ from discord.ext import commands
 from discord import Activity, ActivityType, TextChannel, Member
 
 class Reminder:
-    channelid: int
+    channelids: List[int]
     interval: int
     text: str
     count: int
     def __init__(self, channel, interval, text):
-        self.channelid = channel
+        self.channelid = [channel]
         self.interval = interval
         self.text = text
         self.count = 0
@@ -170,7 +170,7 @@ class AutoMod(commands.Cog):
 
     async def _checkreminders(self, message):
         for reminder in self.data.reminders.values():
-            if message.channel.id == reminder.channelid:
+            if message.channel.id in reminder.channelids:
                 reminder.count += 1
             if reminder.count >= reminder.interval:
                 await message.channel.send(reminder.text)
@@ -226,7 +226,7 @@ class AutoMod(commands.Cog):
         if ctx.message.channel.id != self.config.getint('ControlID'):
             return
         if ctx.invoked_subcommand == None:
-            summary = 'No reminders set' if len(self.data.reminders) == 0 else '\n'.join([f'{k} in <#{v.channelid}> every {v.interval} messages.' for k, v in self.data.reminders.items()])
+            summary = 'No reminders set' if len(self.data.reminders) == 0 else '\n'.join([f'{k} in <#{v.channelids}> every {v.interval} messages.' for k, v in self.data.reminders.items()])
             await ctx.message.channel.send(summary)
 
     @reminders.command(name = 'add')

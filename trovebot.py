@@ -55,9 +55,16 @@ async def periodic_save():
         await records.save()
         print('periodic save')
 
+async def periodic_leaderboard():
+    while True:
+        await asyncio.sleep(3600)
+        await records.update_leaderboard()
+        print('periodic leaderboard')
+
 autoping.autoping()
 
 trovebot.add_cog(automod)
 trovebot.add_cog(records)
 trovebot.loop.create_task(periodic_save())
+trovebot.loop.create_task(periodic_leaderboard())
 trovebot.run(os.getenv('TOKEN'))

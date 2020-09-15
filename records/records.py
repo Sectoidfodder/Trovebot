@@ -153,7 +153,7 @@ class Records(commands.Cog):
             if msg != None and checks:
                 await self._check_demotions(mid)
 
-    async def _update_leaderboard(self):
+    async def update_leaderboard(self):
         print('checking leaders')
         leaders = [(k, v.get_vouch_summary()[0]) for k, v in self.data.member_db.items()]
         leaders = sorted(leaders, key=lambda x: x[1], reverse=True)
@@ -437,7 +437,7 @@ class Records(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def refresh_leaderboard(self, ctx):
-        await self._update_leaderboard()
+        await self.update_leaderboard()
 
     @commands.command()
     @commands.is_owner()
