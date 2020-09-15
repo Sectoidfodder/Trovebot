@@ -7,9 +7,9 @@ from configparser import ConfigParser
 from discord.ext import commands
 from automod.automod import AutoMod
 from records.records import Records
-from utils import autoping
+#from utils import autoping
 
-trovebot = commands.Bot('t!')
+trovebot = commands.Bot('!')
 config = ConfigParser()
 config.read('trovebot.ini')
 load_dotenv()
@@ -61,7 +61,7 @@ async def periodic_leaderboard():
         await records.update_leaderboard()
         print('periodic leaderboard')
 
-autoping.autoping()
+#autoping.autoping()
 
 trovebot.add_cog(automod)
 trovebot.add_cog(records)

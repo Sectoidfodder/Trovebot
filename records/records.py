@@ -48,10 +48,11 @@ class Records(commands.Cog):
             summary = (0, 0, 0)
             if id in self.data.member_db.keys():
                 summary = self.data.member_db[id].get_vouch_summary()
+                history = self.data.member_db[id].get_vouch_history()
             channel = guild.get_channel(self.config.getint('VouchTrackingID'))
             for roleid, req in eval(self.config.get('VouchRoles')):
                 role = guild.get_role(roleid)
-                if summary[0] >= req and not role in member.roles:
+                if summary[0] + history[0] >= req and not role in member.roles:
                     await member.add_roles(role)
                     await channel.send(f'{member.mention} promoted to {role.name}!')
                     #print(f'promoting {member.name} to {role.name}')
@@ -77,9 +78,10 @@ class Records(commands.Cog):
             summary = (0, 0, 0)
             if id in self.data.member_db.keys():
                 summary = self.data.member_db[id].get_vouch_summary()
+                history = self.data.member_db[id].get_vouch_history()
             for roleid, req in eval(self.config.get('VouchRoles')):
                 role = guild.get_role(roleid)
-                if summary[0] < req and role in member.roles:
+                if summary[0] + history[0] < req and role in member.roles:
                     await channel.send(f'{member.mention} edited/deleted below requirement for {role.name}')
         if not self._message_lock_rep:
             summary = (0, 0, 0)
@@ -93,17 +95,17 @@ class Records(commands.Cog):
     async def _check_warnings(self, id: int):
         channel = self.bot.get_channel(self.config.getint('WarningID'))
         vouchmsgs = self.data.member_db[id].vouch_msgs
-        if vouchmsgs[-1][2] >= os.getenv('MENTIONS_WARN'):
+        if len(vouchmsgs) > 0 and vouchmsgs[-1][2] >= int(os.getenv('MENTIONS_WARN')):
             await channel.send(f'<@{id}> vouched 10+ times in one message by <@{vouchmsgs[-1][1]}>')
-        vouchercheck = os.getenv('VOUCHER_CHECK_PER')
+        vouchercheck = int(os.getenv('VOUCHER_CHECK_PER'))
         if len(vouchmsgs) % vouchercheck == 0:
             newvouchers = set()
             count = 0
             for msg in vouchmsgs[-1:(-1-vouchercheck):-1]:
-                if snowflake.time_diff(msg[1], msg[0]) // (60 * 60 * 24) < os.getenv('VOUCHER_CHECK_AGE'):
+                if snowflake.time_diff(msg[1], msg[0]) // (60 * 60 * 24) < int(os.getenv('VOUCHER_CHECK_AGE')):
                     newvouchers.add(msg[1])
                     count += 1
-            if count >= os.getenv('VOUCHER_CHECK_THRESHOLD'):
+            if count >= int(os.getenv('VOUCHER_CHECK_THRESHOLD')):
                 vouchermentions = ', '.join([f'<@{v}>' for v in newvouchers])
                 await channel.send(f'<@{id} {count}/{vouchercheck} most recent vouches from new accounts: {vouchermentions}')
 
@@ -186,7 +188,8 @@ class Records(commands.Cog):
             if n < secondlimit and leaders[i][1] >= minvouches:
                 secondnew.add(member)
             n += 1
-            leaderstxt += f'\n{n}. {member.display_name} ({leaders[i][1]})'
+            if leaders[i][1] > 0:
+                leaderstxt += f'\n{n}. {member.display_name} ({leaders[i][1]})'
         topremove = topold - topnew
         for m in topremove:
             if secondrole.id not in self.data.member_db[m.id].legacy_roles:
@@ -324,6 +327,7 @@ class Records(commands.Cog):
                 if count % 1000 == 0:
                     print(count)
             print(f'{count} rep processed')
+        self.data.timestamp_rep = datetime.utcnow()
         self._message_lock_rep = False
 
         print('retrieving missed vouches...')
@@ -346,6 +350,7 @@ class Records(commands.Cog):
                 if count % 1000 == 0:
                     print(count)
             print(f'{count} vouches processed')
+        self.data.timestamp_vouch = datetime.utcnow()
         self._message_lock_vouch = False
         
         print('records ready')
@@ -411,6 +416,19 @@ class Records(commands.Cog):
             member = ctx.message.author
         memberinfo = await self._build_rep_embed(member)
         await ctx.send(embed=memberinfo)
+
+    @commands.command(aliases=['info'])
+    async def get_info(self, ctx, member: Member):
+        if ctx.message.channel.id != self.config.getint('ControlID'):
+            return
+        if member.id in self.data.member_db.keys():
+            await ctx.send(
+                f'ID: {member.id}\n'
+                f'Legacy roles: {self.data.member_db[member.id].legacy_roles}\n'
+                f'Linked PoE account: {self.data.member_db[member.id].poe_account}\n'
+            )
+        else:
+            await ctx.send('Member not found in records')
 
     @commands.command()
     async def debugprint(self, ctx, member: Member, count: int = 100):
